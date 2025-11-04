@@ -1,0 +1,18 @@
+LIBRARY msidcrl40
+EXPORTS
+	Uninitialize @ 2
+	PassportFreeMemory @ 3
+	CreateIdentityHandle @ 4
+	SetCredential @ 5
+	CloseIdentityHandle @ 8
+	AuthIdentityToService @ 13
+	PersistCredential @ 15
+	RemovePersistedCredential @ 16
+	HasPersistedCredential @ 23
+	SetIdentityCallback @ 24
+	InitializeEx @ 29
+	LogonIdentityEx @ 31
+	GetAuthStateEx @ 34
+	CancelPendingRequest @ 38
+	GetIdentityPropertyByName @ 41
+	GetWebAuthUrlEx @ 52
