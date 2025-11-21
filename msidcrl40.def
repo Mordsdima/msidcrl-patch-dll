@@ -8,6 +8,7 @@ EXPORTS
 	AuthIdentityToService @ 13
 	PersistCredential @ 15
 	RemovePersistedCredential @ 16
+	EnumIdentitiesWithCachedCredentials @ 17
 	HasPersistedCredential @ 23
 	SetIdentityCallback @ 24
 	InitializeEx @ 29

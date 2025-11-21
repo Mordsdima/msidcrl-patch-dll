@@ -19,6 +19,11 @@ typedef struct _RST_PARAM
 	DWORD dwTokenParams;
 } RST_PARAM, * PRST_PARAM;
 
+typedef struct _PEIH
+{
+	LPVOID pEnumCreds;
+} PEIH, * PPEIH, HENUMIDENTITY;
+
 typedef HRESULT(WINAPI* IdentityCallback_t)(HANDLE hIdentity, PVOID pData, BYTE bCanContinue);
 
 bool InitializeMSIDCRL();

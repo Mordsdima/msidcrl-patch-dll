@@ -13,6 +13,15 @@
 	static def (WINAPI *func##Orig) args; \
 	DLL_FUNC def WINAPI func args
 
+#define D(fmt, ...) { \
+	if (FileDebug) { \
+		fprintf(FileDebug, "%s" fmt, __VA_ARGS__); \
+		fprintf(FileDebug, "\n"); fflush(FileDebug); \
+	} \
+};
+
+static FILE* FileDebug = NULL;
+
 extern bool g_InitializedModule;
 
 static bool g_HasRequestedService = false;
@@ -22,6 +31,8 @@ static PVOID g_savedCallbackData = NULL;
 
 IDCRL_FUNC(HRESULT, Uninitialize, ())
 {
+	D("Bye!", "");
+	fclose(FileDebug);
 	return UninitializeOrig();
 }
 
@@ -45,6 +56,27 @@ IDCRL_FUNC(HRESULT, CloseIdentityHandle, (HANDLE hIdentity))
 	return CloseIdentityHandleOrig(hIdentity);
 }
 
+IDCRL_FUNC(HRESULT, EnumIdentitiesWithCachedCredentials, (LPCWSTR szCredType, HENUMIDENTITY* phEnumIdentities))
+{
+	return EnumIdentitiesWithCachedCredentialsOrig(szCredType, phEnumIdentities);
+}
+
+IDCRL_FUNC(HRESULT, LogonIdentityEx, (HANDLE hIdentity, LPCWSTR wszAuthPolicy, DWORD dwAuthFlags, PRST_PARAM pRstParams, DWORD dwRstParamCount))
+{
+	if (g_InitializedModule)
+	{
+		g_HasRequestedService = true;
+	}
+
+	return LogonIdentityExOrig(hIdentity, wszAuthPolicy, 0, pRstParams, dwRstParamCount);
+}
+
+bool gAuth_done = true;
+
+void auth_callback(HANDLE hIdentity, void* data, int canContinue) {
+	gAuth_done = true;
+}
+
 IDCRL_FUNC(HRESULT, AuthIdentityToService, (HANDLE hIdentity, LPCWSTR wszServiceTarget, LPCWSTR wszServicePolicy, DWORD dwTokenRequestFlags, LPCWSTR wszToken, DWORD dwResultFlags, PBYTE pbSessionKey, PDWORD pdwSessionKeyLength))
 {
 	// spoof to always use the cached token (since we request one in LogonIdentityEx)
@@ -62,6 +94,27 @@ IDCRL_FUNC(HRESULT, AuthIdentityToService, (HANDLE hIdentity, LPCWSTR wszService
 	// if we got a successful hresult, we spoofed to use the cache so there was no identity callback called, so we should call it
 	if (spoofed && hr == 0 && g_savedCallback != NULL)
 		g_savedCallback(hIdentity, g_savedCallbackData, 0);
+
+	// if we get thing related to 0x80048862 (basically PPCRL_E_UNABLE_TO_RETRIEVE_SERVICE_TOKEN) OR 0x80048820 then re-request it via dirty way and again try to get token
+	if (g_HasRequestedService && (hr == 0x80048862 || hr == 0x80048820) && g_InitializedModule) {
+		RST_PARAM params[1];
+		params[0].cbSize = sizeof(RST_PARAM);
+		params[0].dwServiceName = wszServiceTarget;
+		params[0].dwServicePolicy = wszServicePolicy;
+		params[0].dwTokenFlags = 0;
+		params[0].dwTokenParams = 0;
+
+		HRESULT log_hr = LogonIdentityEx(hIdentity, NULL, 0, params, 1);
+
+		hr = AuthIdentityToServiceOrig(hIdentity, wszServiceTarget, wszServicePolicy, dwTokenRequestFlags, wszToken, dwResultFlags, pbSessionKey, pdwSessionKeyLength);
+		// if it's busy then re-ask it till it fails
+		if (hr == 0x80048882) {
+			while (hr == 0x80048882) {
+				hr = AuthIdentityToServiceOrig(hIdentity, wszServiceTarget, wszServicePolicy, dwTokenRequestFlags, wszToken, dwResultFlags, pbSessionKey, pdwSessionKeyLength);
+				Sleep(100);
+			}
+		}
+	}
 
 	return hr;
 }
@@ -95,32 +148,21 @@ IDCRL_FUNC(HRESULT, InitializeEx, (LPGUID lpAppGuid, DWORD dwPpcrlVersion, DWORD
 		// PP_E_CRL_NOT_INITIALIZED
 		return 0x80048008;
 	}
+
+	fopen_s(&FileDebug, "msidcrl.log", "a");
+	D("hello", "");
+
 	return InitializeExOrig(lpAppGuid, dwPpcrlVersion, dwFlags, pOptions, dwOptions);
-}
-
-IDCRL_FUNC(HRESULT, LogonIdentityEx, (HANDLE hIdentity, LPCWSTR wszAuthPolicy, DWORD dwAuthFlags, PRST_PARAM pRstParams, DWORD dwRstParamCount))
-{
-	if (g_InitializedModule)
-	{
-		// the version of MSIDCRL we're using has an issue under Wine where AuthIdentityToService fails to make a valid request
-		// so we request a service token in the initial logon request instead 
-		RST_PARAM params[1];
-		params[0].cbSize = sizeof(RST_PARAM);
-		params[0].dwServiceName = L"http://kdc.xboxlive.com"; //L"marketplace.windowsmobile.com";
-		params[0].dwServicePolicy = L"LBI_KEY";
-		params[0].dwTokenFlags = 0;
-		params[0].dwTokenParams = 0;
-		pRstParams = params;
-		dwRstParamCount = 1;
-		g_HasRequestedService = true;
-	}
-
-	return LogonIdentityExOrig(hIdentity, wszAuthPolicy, dwAuthFlags, pRstParams, dwRstParamCount);
 }
 
 IDCRL_FUNC(HRESULT, GetAuthStateEx, (HANDLE hIdentity, LPCWSTR wszServiceTarget, PDWORD pdwAuthState, PDWORD dwAuthRequired, PDWORD pdwRequestStatus, LPCWSTR *wszWebFlowUrl))
 {
 	return GetAuthStateExOrig(hIdentity, wszServiceTarget, pdwAuthState, dwAuthRequired, pdwRequestStatus, wszWebFlowUrl);
+}
+
+IDCRL_FUNC(HRESULT, GetAuthState, (HANDLE hIdentity, DWORD* pdwAuthState, DWORD* pdwAuthRequired, DWORD* pdwRequestStatus, LPWSTR* szWebFlowUrl))
+{
+	return GetAuthStateOrig(hIdentity, pdwAuthState, pdwAuthRequired, pdwRequestStatus, szWebFlowUrl);
 }
 
 IDCRL_FUNC(HRESULT, CancelPendingRequest, (HANDLE hIdentity))
@@ -179,6 +221,8 @@ bool InitializeMSIDCRL()
 	RESOLVE_FUNC(CancelPendingRequest);
 	RESOLVE_FUNC(GetIdentityPropertyByName);
 	RESOLVE_FUNC(GetWebAuthUrlEx);
+	RESOLVE_FUNC(EnumIdentitiesWithCachedCredentials);
+	RESOLVE_FUNC(GetAuthState);
 #undef RESOLVE_FUNC
 
 	return true;

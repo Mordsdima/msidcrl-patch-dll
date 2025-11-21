@@ -88,11 +88,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     {
     case DLL_PROCESS_ATTACH:
         // make sure we're a GfWL game before doing anything
-        if (IsCurrentProcessGfWL())
-        {
-            g_GfLLmodule = hModule;
-            InitializeGfLL();
-        }
+        g_GfLLmodule = hModule;
+        InitializeGfLL();
         break;
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
