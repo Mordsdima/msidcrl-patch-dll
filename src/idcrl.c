@@ -71,6 +71,12 @@ IDCRL_FUNC(HRESULT, LogonIdentityEx, (HANDLE hIdentity, LPCWSTR wszAuthPolicy, D
 	return LogonIdentityExOrig(hIdentity, wszAuthPolicy, 0, pRstParams, dwRstParamCount);
 }
 
+IDCRL_FUNC(HRESULT, LogonIdentity, (HANDLE hIdentity, LPCWSTR wszAuthPolicy, DWORD dwAuthFlags))
+{
+	// this should've worked with the original LogonIdentity but whatever
+	return LogonIdentityExOrig(hIdentity, wszAuthPolicy, dwAuthFlags, NULL, 0);
+}
+
 bool gAuth_done = true;
 
 void auth_callback(HANDLE hIdentity, void* data, int canContinue) {
@@ -213,6 +219,7 @@ bool InitializeMSIDCRL()
 	RESOLVE_FUNC(RemovePersistedCredential);
 	RESOLVE_FUNC(HasPersistedCredential);
 	RESOLVE_FUNC(SetIdentityCallback);
+	RESOLVE_FUNC(LogonIdentity);
 	RESOLVE_FUNC(InitializeEx);
 	RESOLVE_FUNC(LogonIdentityEx);
 	RESOLVE_FUNC(GetAuthStateEx);

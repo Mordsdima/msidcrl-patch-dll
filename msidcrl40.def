@@ -12,6 +12,7 @@ EXPORTS
 	HasPersistedCredential @ 23
 	SetIdentityCallback @ 24
 	InitializeEx @ 29
+	LogonIdentity @ 21
 	LogonIdentityEx @ 31
 	GetAuthStateEx @ 34
 	CancelPendingRequest @ 38
