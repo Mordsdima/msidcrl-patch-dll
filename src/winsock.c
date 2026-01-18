@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "MinHook.h"
+#include "ini.h"
 #pragma comment(lib, "ws2_32.lib")
 
 #define LOOKUP_HANDLE_MAGIC ((HANDLE)0x67676767)
@@ -23,6 +24,8 @@ typedef struct _hostentBLOB_t {
 	int16_t h_length;
 	uint32_t h_addr_list_offset;
 } hostentBLOB_t;
+
+extern ini_t* g_Config;
 
 hostentBLOB_t* gethostbyname_to_blob(const char* name, int *blob_size)
 {
@@ -117,19 +120,39 @@ hostentBLOB_t* gethostbyname_to_blob(const char* name, int *blob_size)
 static DWORD(WINAPI* WSALookupServiceBeginA_orig)(PWSAQUERYSETA lpqsRestrictions, DWORD dwControlFlags, PHANDLE lphLookup);
 DWORD WINAPI WSALookupServiceBeginA_hook(PWSAQUERYSETA lpqsRestrictions, DWORD dwControlFlags, PHANDLE lphLookup)
 {
-	DWORD r = WSALookupServiceBeginA_orig(lpqsRestrictions, dwControlFlags, lphLookup);
+	//DWORD r = 
 	
 	// TODO: check if it's the gethostbyname GUID. this is fine for now
-	if (r != 0 && lpqsRestrictions->dwNameSpace == NS_DNS)
+	/*if (r != 0 && lpqsRestrictions->dwNameSpace == NS_DNS)
 	{
 		strncpy(g_dnsName, lpqsRestrictions->lpszServiceInstanceName, sizeof(g_dnsName));
 		g_inProgress = true;
 		g_doneResults = false;
 		*lphLookup = LOOKUP_HANDLE_MAGIC;
 		return 0;
+	} im not sure if we even need this*/
+
+	// gfwl
+	if (_stricmp(lpqsRestrictions->lpszServiceInstanceName, "xemacs.xboxlive.com") == 0 || _stricmp(lpqsRestrictions->lpszServiceInstanceName, "xemacs.part.xboxlive.com") == 0) {
+		if (!ini_get(g_Config, "server", "macs")) {
+			MessageBoxA(NULL, "It seems that your config is either damaged or not full because server.macs is not present.", "Config validation error", 0x10);
+		}
+		lpqsRestrictions->lpszServiceInstanceName = ini_get(g_Config, "server", "macs");
+	}
+	else if (_stricmp(lpqsRestrictions->lpszServiceInstanceName, "xeas.xboxlive.com") == 0 || _stricmp(lpqsRestrictions->lpszServiceInstanceName, "xeas.part.xboxlive.com") == 0) {
+		if (!ini_get(g_Config, "server", "as")) {
+			MessageBoxA(NULL, "It seems that your config is either damaged or not full because server.as is not present.", "Config validation error", 0x10);
+		}
+		lpqsRestrictions->lpszServiceInstanceName = ini_get(g_Config, "server", "as");
+	}
+	else if (_stricmp(lpqsRestrictions->lpszServiceInstanceName, "xetgs.xboxlive.com") == 0 || _stricmp(lpqsRestrictions->lpszServiceInstanceName, "xetgs.part.xboxlive.com") == 0) {
+		if (!ini_get(g_Config, "server", "tgs")) {
+			MessageBoxA(NULL, "It seems that your config is either damaged or not full because server.tgs is not present.", "Config validation error", 0x10);
+		}
+		lpqsRestrictions->lpszServiceInstanceName = ini_get(g_Config, "server", "tgs");
 	}
 
-	return r;
+	return WSALookupServiceBeginA_orig(lpqsRestrictions, dwControlFlags, lphLookup);;
 }
 
 static DWORD(WINAPI* WSALookupServiceNextA_orig)(HANDLE hLookup, DWORD dwControlFlags, LPDWORD lpdwBufferLength, LPWSAQUERYSETA lpqsResults);
@@ -203,10 +226,21 @@ DWORD WINAPI WSAIoctl_hook(SOCKET s, DWORD dwIoControlCode, LPVOID lpvInBuffer, 
 	return r;
 }
 
+static int(WSAAPI* getaddrinfo_orig)(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA* pHints, PADDRINFOA* ppResult);
+int WSAAPI getaddrinfo_hook(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA* pHints, PADDRINFOA* ppResult) {
+	if (!pNodeName) {
+		return getaddrinfo_orig(pNodeName, pServiceName, pHints, ppResult); // at mercy of original
+	}
+
+	return getaddrinfo_orig(pNodeName, pServiceName, pHints, ppResult);
+}
+
 bool InitializeWinSock()
 {
 	MH_CreateHookApi(L"ws2_32.dll", "WSALookupServiceBeginA", (LPVOID)WSALookupServiceBeginA_hook, (LPVOID*)&WSALookupServiceBeginA_orig);
 	MH_CreateHookApi(L"ws2_32.dll", "WSALookupServiceNextA", (LPVOID)WSALookupServiceNextA_hook, (LPVOID*)&WSALookupServiceNextA_orig);
 	MH_CreateHookApi(L"ws2_32.dll", "WSALookupServiceEnd", (LPVOID)WSALookupServiceEnd_hook, (LPVOID*)&WSALookupServiceEnd_orig);
 	MH_CreateHookApi(L"ws2_32.dll", "WSAIoctl", (LPVOID)WSAIoctl_hook, (LPVOID*)&WSAIoctl_orig);
+	MH_CreateHookApi(L"ws2_32.dll", "getaddrinfo", (LPVOID)getaddrinfo_hook, (LPVOID*)&getaddrinfo_orig);
+
 }

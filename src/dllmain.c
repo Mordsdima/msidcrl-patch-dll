@@ -8,7 +8,9 @@
 #include "idcrl.h"
 #include "winsock.h"
 #include "winhttp.h"
+#include "ini.h"
 
+ini_t* g_Config = NULL;
 HMODULE g_GfLLmodule = NULL;
 bool g_InitializedModule = false;
 
@@ -36,9 +38,19 @@ void WINAPI PathStripPathW_new(LPWSTR pszPath)
         wcscpy(pszPath, L"msidcrl67.dll");
 }
 
+
+
 // initializes the patches set up by the gfll DLL
 void InitializeGfLL()
 {
+    // load config because we need it further in msidcrl stuff
+    g_Config = ini_load("patcher_conf.ini");
+    if (!g_Config) {
+        // uh-oh!
+        MessageBoxA(NULL, "patcher_conf.ini failed to load thus patches ARE NOT applied.", "Config load failure", 0x10);
+        return;
+    }
+
     MH_Initialize();
     InitializeWinSock();
     InitializeWinHTTP();

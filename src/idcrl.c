@@ -77,7 +77,7 @@ void auth_callback(HANDLE hIdentity, void* data, int canContinue) {
 	gAuth_done = true;
 }
 
-IDCRL_FUNC(HRESULT, AuthIdentityToService, (HANDLE hIdentity, LPCWSTR wszServiceTarget, LPCWSTR wszServicePolicy, DWORD dwTokenRequestFlags, LPCWSTR wszToken, DWORD dwResultFlags, PBYTE pbSessionKey, PDWORD pdwSessionKeyLength))
+IDCRL_FUNC(HRESULT, AuthIdentityToService, (HANDLE hIdentity, LPCWSTR wszServiceTarget, LPCWSTR wszServicePolicy, DWORD dwTokenRequestFlags, LPCWSTR wszToken, DWORD dwResultFlags, PBYTE* pbSessionKey, PDWORD pdwSessionKeyLength))
 {
 	// spoof to always use the cached token (since we request one in LogonIdentityEx)
 	// we don't spoof if xlive is already requesting a cached token
@@ -150,8 +150,6 @@ IDCRL_FUNC(HRESULT, InitializeEx, (LPGUID lpAppGuid, DWORD dwPpcrlVersion, DWORD
 	}
 
 	fopen_s(&FileDebug, "msidcrl.log", "a");
-	D("hello", "");
-
 	return InitializeExOrig(lpAppGuid, dwPpcrlVersion, dwFlags, pOptions, dwOptions);
 }
 

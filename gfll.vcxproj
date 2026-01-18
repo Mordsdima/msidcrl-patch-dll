@@ -92,16 +92,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.c" />
-    <ClCompile Include="idcrl.c" />
-    <ClCompile Include="winhttp.c" />
-    <ClCompile Include="winsock.c" />
+    <ClCompile Include="src/dllmain.c" />
+    <ClCompile Include="src/idcrl.c" />
+    <ClCompile Include="src/winhttp.c" />
+    <ClCompile Include="src/winsock.c" />
+	<ClCompile Include="src/ini.c" />
+	<ClCompile Include="src/utils.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="idcrl.h" />
+    <ClInclude Include="src/idcrl.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="winhttp.h" />
-    <ClInclude Include="winsock.h" />
+    <ClInclude Include="src/winhttp.h" />
+    <ClInclude Include="src/winsock.h" />
+	<ClInclude Include="src/ini.h" />
+	<ClInclude Include="src/utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="msidcrl40.def" />
