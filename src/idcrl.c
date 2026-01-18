@@ -73,6 +73,11 @@ IDCRL_FUNC(HRESULT, LogonIdentityEx, (HANDLE hIdentity, LPCWSTR wszAuthPolicy, D
 
 IDCRL_FUNC(HRESULT, LogonIdentity, (HANDLE hIdentity, LPCWSTR wszAuthPolicy, DWORD dwAuthFlags))
 {
+	if (g_InitializedModule)
+	{
+		g_HasRequestedService = true;
+	}
+
 	// this should've worked with the original LogonIdentity but whatever
 	return LogonIdentityExOrig(hIdentity, wszAuthPolicy, dwAuthFlags, NULL, 0);
 }

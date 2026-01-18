@@ -4,11 +4,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <Shlwapi.h>
 #include "MinHook.h"
 #include "idcrl.h"
 #include "winsock.h"
 #include "winhttp.h"
 #include "ini.h"
+
+#pragma comment(lib, "Shlwapi.lib")
+
 
 ini_t* g_Config = NULL;
 HMODULE g_GfLLmodule = NULL;
@@ -44,10 +48,15 @@ void WINAPI PathStripPathW_new(LPWSTR pszPath)
 void InitializeGfLL()
 {
     // load config because we need it further in msidcrl stuff
-    g_Config = ini_load("patcher_conf.ini");
+    char msidcrl_path[MAX_PATH];
+    GetModuleFileNameA(GetModuleHandleA("msidcrl40.dll"), msidcrl_path, MAX_PATH);
+    PathRemoveFileSpecA(msidcrl_path);
+    char config_path[MAX_PATH];
+    sprintf_s(config_path, MAX_PATH, "%s/patcher_conf.ini", msidcrl_path);
+    g_Config = ini_load(config_path);
     if (!g_Config) {
         // uh-oh!
-        MessageBoxA(NULL, "patcher_conf.ini failed to load thus patches ARE NOT applied.", "Config load failure", 0x10);
+        MessageBoxA(NULL, "patcher_conf.ini failed to load from msidcrl40 location thus patches ARE NOT applied.", "Config load failure", 0x10);
         return;
     }
 
