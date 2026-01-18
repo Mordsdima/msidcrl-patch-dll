@@ -1,0 +1,5 @@
+[server]
+login = "google.com"
+as = "localhost"
+macs = "localhost"
+tgs = "localhost"
