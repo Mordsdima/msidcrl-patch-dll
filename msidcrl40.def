@@ -17,4 +17,5 @@ EXPORTS
 	GetAuthStateEx @ 34
 	CancelPendingRequest @ 38
 	GetIdentityPropertyByName @ 41
+	ExportAuthState @ 43
 	GetWebAuthUrlEx @ 52

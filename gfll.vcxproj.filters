@@ -15,30 +15,42 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.c">
+    <ClCompile Include="src/dllmain.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="idcrl.c">
+    <ClCompile Include="src/idcrl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="winsock.c">
+    <ClCompile Include="src/winhttp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="winhttp.c">
+    <ClCompile Include="src/winsock.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src/ini.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="idcrl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="winsock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="winhttp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src/idcrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src/winhttp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src/winsock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src/ini.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

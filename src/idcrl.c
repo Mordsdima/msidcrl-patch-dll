@@ -184,6 +184,11 @@ IDCRL_FUNC(HRESULT, GetIdentityPropertyByName, (HANDLE hIdentity, LPCWSTR wszPro
 	return GetIdentityPropertyByNameOrig(hIdentity, wszPropertyName, wszPropertyValue);
 }
 
+IDCRL_FUNC(HRESULT, ExportAuthState, (HANDLE hIdentity, int a2, LPCWSTR* a3))
+{
+    return 0x80070005;
+}
+
 IDCRL_FUNC(HRESULT, GetWebAuthUrlEx, (HANDLE hIdentity, DWORD dwWebAuthFlag, LPCWSTR wszTargetServiceName, LPCWSTR wszServicePolicy, LPCWSTR wszAdditionalPostParams, LPCWSTR wszWebAuthUrl, LPCWSTR wszPostData))
 {
 	return GetWebAuthUrlExOrig(hIdentity, dwWebAuthFlag, wszTargetServiceName, wszServicePolicy, wszAdditionalPostParams, wszWebAuthUrl, wszPostData);
@@ -233,6 +238,7 @@ bool InitializeMSIDCRL()
 	RESOLVE_FUNC(GetWebAuthUrlEx);
 	RESOLVE_FUNC(EnumIdentitiesWithCachedCredentials);
 	RESOLVE_FUNC(GetAuthState);
+	RESOLVE_FUNC(ExportAuthState);
 #undef RESOLVE_FUNC
 
 	return true;
