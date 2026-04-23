@@ -115,7 +115,10 @@ IDCRL_FUNC(HRESULT, AuthIdentityToService, (HANDLE hIdentity, LPCWSTR wszService
 		params[0].dwTokenFlags = 0;
 		params[0].dwTokenParams = 0;
 
-		HRESULT log_hr = LogonIdentityEx(hIdentity, NULL, 0, params, 1);
+		hr = LogonIdentityEx(hIdentity, NULL, 0, params, 1);
+		if (hr != 0) {
+			return hr;
+		}
 
 		hr = AuthIdentityToServiceOrig(hIdentity, wszServiceTarget, wszServicePolicy, dwTokenRequestFlags, wszToken, dwResultFlags, pbSessionKey, pdwSessionKeyLength);
 		// if it's busy then re-ask it till it fails

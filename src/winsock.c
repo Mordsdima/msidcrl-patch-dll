@@ -131,8 +131,11 @@ DWORD WINAPI WSALookupServiceBeginA_hook(PWSAQUERYSETA lpqsRestrictions, DWORD d
 		*lphLookup = LOOKUP_HANDLE_MAGIC;
 		return 0;
 	} im not sure if we even need this*/
-
+	// return early since we dont have to do anything
+	if (!lpqsRestrictions || !lpqsRestrictions->lpszServiceInstanceName) return WSALookupServiceBeginA_orig(lpqsRestrictions, dwControlFlags, lphLookup);
 	// gfwl
+	
+
 	if (_stricmp(lpqsRestrictions->lpszServiceInstanceName, "xemacs.xboxlive.com") == 0 || _stricmp(lpqsRestrictions->lpszServiceInstanceName, "xemacs.part.xboxlive.com") == 0) {
 		if (!ini_get(g_Config, "server", "macs")) {
 			MessageBoxA(NULL, "It seems that your config is either damaged or not full because server.macs is not present.", "Config validation error", 0x10);
@@ -152,7 +155,7 @@ DWORD WINAPI WSALookupServiceBeginA_hook(PWSAQUERYSETA lpqsRestrictions, DWORD d
 		lpqsRestrictions->lpszServiceInstanceName = ini_get(g_Config, "server", "tgs");
 	}
 
-	return WSALookupServiceBeginA_orig(lpqsRestrictions, dwControlFlags, lphLookup);;
+	return WSALookupServiceBeginA_orig(lpqsRestrictions, dwControlFlags, lphLookup);
 }
 
 static DWORD(WINAPI* WSALookupServiceNextA_orig)(HANDLE hLookup, DWORD dwControlFlags, LPDWORD lpdwBufferLength, LPWSAQUERYSETA lpqsResults);
