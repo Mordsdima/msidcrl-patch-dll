@@ -13,7 +13,6 @@
 
 #pragma comment(lib, "Shlwapi.lib")
 
-
 ini_t* g_Config = NULL;
 HMODULE g_GfLLmodule = NULL;
 bool g_InitializedModule = false;

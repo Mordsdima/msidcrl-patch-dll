@@ -13,13 +13,6 @@
 	static def (WINAPI *func##Orig) args; \
 	DLL_FUNC def WINAPI func args
 
-#define D(fmt, ...) { \
-	if (FileDebug) { \
-		fprintf(FileDebug, "%s" fmt, __VA_ARGS__); \
-		fprintf(FileDebug, "\n"); fflush(FileDebug); \
-	} \
-};
-
 static FILE* FileDebug = NULL;
 
 extern bool g_InitializedModule;
@@ -31,8 +24,6 @@ static PVOID g_savedCallbackData = NULL;
 
 IDCRL_FUNC(HRESULT, Uninitialize, ())
 {
-	D("Bye!", "");
-	fclose(FileDebug);
 	return UninitializeOrig();
 }
 
@@ -101,7 +92,7 @@ IDCRL_FUNC(HRESULT, AuthIdentityToService, (HANDLE hIdentity, LPCWSTR wszService
 
 	// call through to the original
 	HRESULT hr = AuthIdentityToServiceOrig(hIdentity, wszServiceTarget, wszServicePolicy, dwTokenRequestFlags, wszToken, dwResultFlags, pbSessionKey, pdwSessionKeyLength);
-	
+
 	// if we got a successful hresult, we spoofed to use the cache so there was no identity callback called, so we should call it
 	if (spoofed && hr == 0 && g_savedCallback != NULL)
 		g_savedCallback(hIdentity, g_savedCallbackData, 0);
@@ -163,7 +154,6 @@ IDCRL_FUNC(HRESULT, InitializeEx, (LPGUID lpAppGuid, DWORD dwPpcrlVersion, DWORD
 		return 0x80048008;
 	}
 
-	fopen_s(&FileDebug, "msidcrl.log", "a");
 	return InitializeExOrig(lpAppGuid, dwPpcrlVersion, dwFlags, pOptions, dwOptions);
 }
 
